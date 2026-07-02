@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Promoções · Suporte</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ── DARK THEME (padrão) ── */
+body{
+  --bg:#0a0a0f;--surface:#111118;--card:#16161f;--border:rgba(255,255,255,.07);
+  --blue:#2d69ff;--green:#07a52b;--gold:#f5a623;
+  --text:#e8e8f0;--muted:rgba(255,255,255,.4);--muted2:rgba(255,255,255,.2);
+  --row-hover:rgba(255,255,255,.02);--th-bg:rgba(255,255,255,.03);
+  background:var(--bg);color:var(--text);
+  font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;transition:background .25s,color .25s
+}
+
+/* ── LIGHT THEME ── */
+body.light{
+  --bg:#f0f2f7;--surface:#ffffff;--card:#f7f8fc;--border:rgba(0,0,0,.08);
+  --blue:#1a50d9;--green:#068a23;--gold:#d4890e;
+  --text:#1a1a2e;--muted:rgba(0,0,0,.45);--muted2:rgba(0,0,0,.2);
+  --row-hover:rgba(0,0,0,.02);--th-bg:rgba(0,0,0,.03)
+}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;transition:background .25s}
+.header-logos{display:flex;gap:6px}
+.logo-btn{font-size:10px;font-weight:900;padding:5px 11px;border-radius:7px;letter-spacing:.8px;cursor:pointer;border:2px solid transparent;transition:all .2s;user-select:none}
+.logo-np{background:#07a52b;color:#fff}
+.logo-npf{background:#2d69ff;color:#fff}
+.logo-btn.inactive{opacity:.35;filter:grayscale(.6)}
+.logo-btn:hover{opacity:1;filter:none;transform:scale(1.04)}
+.header-title{font-size:14px;font-weight:700;color:var(--text);flex:1;margin-left:4px}
+.header-sub{font-size:10px;color:var(--muted)}
+.header-actions{display:flex;gap:8px;align-items:center}
+.theme-btn{background:var(--card);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-btn:hover{border-color:var(--blue)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 57px)}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:18px;overflow-y:auto;transition:background .25s}
+.sidebar-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.sidebar-section{margin-bottom:24px}
+
+/* PROMO CARD */
+.promo-card{border-radius:11px;padding:14px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;overflow:hidden}
+.promo-card.active-promo{background:rgba(45,105,255,.07);border-color:rgba(45,105,255,.2)}
+.promo-card.active-promo.selected{border-color:#2d69ff;background:rgba(45,105,255,.12)}
+body.light .promo-card.active-promo{background:rgba(45,105,255,.06)}
+body.light .promo-card.active-promo.selected{background:rgba(45,105,255,.1)}
+.promo-card.expired{background:rgba(255,255,255,.02);border-color:transparent;opacity:.55}
+body.light .promo-card.expired{background:rgba(0,0,0,.03)}
+.promo-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.8px;padding:2px 7px;border-radius:4px;margin-bottom:6px;text-transform:uppercase}
+.tag-active{background:rgba(7,165,43,.2);color:#4ecb71}
+body.light .tag-active{background:rgba(7,165,43,.15);color:#068a23}
+.tag-expired{background:rgba(255,68,68,.13);color:#ff7070}
+body.light .tag-expired{background:rgba(255,68,68,.1);color:#cc2222}
+.tag-soon{background:rgba(245,166,35,.18);color:#f5a623}
+.tag-upcoming{background:rgba(140,82,255,.18);color:#b08aff}
+body.light .tag-upcoming{background:rgba(140,82,255,.12);color:#7c3aed}
+.promo-card.upcoming{background:rgba(140,82,255,.05);border-color:rgba(140,82,255,.2)}
+.promo-card.upcoming.selected{border-color:#8c52ff;background:rgba(140,82,255,.1)}
+.expiry-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;margin-left:0;vertical-align:middle}
+.chip-ok{background:rgba(7,165,43,.15);color:#4ecb71}
+.chip-exp{background:rgba(255,68,68,.12);color:#ff7070}
+.chip-soon{background:rgba(245,166,35,.15);color:#f5a623}
+.chip-upcoming{background:rgba(140,82,255,.15);color:#b08aff}
+.promo-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.promo-cupom{font-size:11px;color:var(--blue);font-family:monospace;font-weight:700;letter-spacing:1px}
+.promo-meta{font-size:10px;color:var(--muted);margin-top=6px;display:flex;gap=8px;flex-wrap:wrap;margin-top:6px}
+.promo-discount{position:absolute;top:10px;right:12px;font-size:17px;font-weight:900;color:rgba(45,105,255,.4)}
+.promo-empresa-tag{display:inline-block;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.etag-npf{background:rgba(45,105,255,.2);color:#7da8ff}
+.etag-neo{background:rgba(7,165,43,.2);color:#4ecb71}
+body.light .etag-npf{background:rgba(45,105,255,.12);color:#1a50d9}
+body.light .etag-neo{background:rgba(7,165,43,.12);color:#068a23}
+
+/* NEW PROMO BUTTON */
+.new-promo-btn{width:100%;background:transparent;border:1px dashed rgba(45,105,255,.35);color:var(--blue);padding:11px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+.new-promo-btn:hover{background:rgba(45,105,255,.08);border-style:solid}
+
+/* MAIN */
+.main{padding:22px;overflow-y:auto}
+
+/* PROMO INFO */
+.promo-info{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px;display:none;transition:background .25s}
+.promo-info.show{display:block}
+.pi-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.pi-icon{font-size:26px}
+.pi-title{font-size:16px;font-weight:800;color:var(--text)}
+.pi-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.pi-rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap=8px;gap:8px}
+.pi-rule{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:background .25s}
+.pi-rule-label{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+.pi-rule-value{font-size:13px;font-weight:700;color:var(--text)}
+.pi-rule-value.blue{color:var(--blue)}
+.pi-rule-value.green{color:var(--green)}
+.pi-rule-value.gold{color:var(--gold)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 16px;text-align:center;transition:background .25s}
+.stat-num{font-size:22px;font-weight:900;color:var(--text);margin-bottom:2px}
+.stat-num.blue{color:var(--blue)}
+.stat-num.green{color:var(--green)}
+.stat-num.gold{color:var(--gold)}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+/* SEARCH */
+.search-bar{display:flex;gap=8px;gap:8px;margin-bottom:14px}
+.search-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 15px;color:var(--text);font-size=13px;font-size:13px;outline:none;transition:border .2s}
+.search-input:focus{border-color:rgba(45,105,255,.5)}
+.search-input::placeholder{color:var(--muted)}
+
+/* FILTER TABS */
+.filter-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ftab{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s}
+.ftab:hover{color:var(--text)}
+.ftab.active{background:rgba(45,105,255,.12);border-color:rgba(45,105,255,.35);color:var(--blue);font-weight:600}
+
+/* TABLE */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:background .25s}
+.table-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-title{font-size:13px;font-weight:700;color:var(--text)}
+.table-count{font-size:11px;color:var(--muted);background:var(--th-bg);padding:3px 10px;border-radius:20px}
+table{width:100%;border-collapse:collapse}
+th{font-size:9px;letter-spacing=1px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:9px 15px;text-align:left;border-bottom:1px solid var(--border);background:var(--th-bg);font-weight:600}
+td{padding:11px 15px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--row-hover)}
+.client-name{font-weight:600;margin-bottom:2px}
+.client-email{font-size:11px;color:var(--muted)}
+.product-badge{display:inline-block;font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;text-transform:uppercase}
+.pb-std{background:rgba(45,105,255,.13);color:var(--blue)}
+.pb-flash{background:rgba(245,166,35,.13);color:var(--gold)}
+.plan-name{font-size:10px;color:var(--muted);margin-top:2px}
+.status-btn{border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.status-pending{background:var(--th-bg);color:var(--muted)}
+.status-pending:hover{background:rgba(7,165,43,.15);color:var(--green)}
+.status-done{background:rgba(7,165,43,.13);color:var(--green)}
+.phone-link{color:var(--muted);font-size:11px;text-decoration:none;transition:color .15s}
+.phone-link:hover{color:#25d366}
+
+/* CHECKBOX */
+.cb{width:15px;height:15px;accent-color:var(--blue);cursor:pointer}
+tr.selected-row td{background:rgba(45,105,255,.06)!important}
+
+/* BULK BAR */
+.bulk-bar{display:none;align-items:center;gap:10px;padding:10px 18px;background:rgba(45,105,255,.1);border-bottom:1px solid rgba(45,105,255,.2);flex-wrap:wrap}
+.bulk-bar.show{display:flex}
+.bulk-count{font-size:12px;font-weight:700;color:var(--blue);flex:1}
+.bulk-btn{border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.bulk-atendido{background:rgba(7,165,43,.15);color:var(--green)}
+.bulk-atendido:hover{background:rgba(7,165,43,.25)}
+.bulk-pendente{background:var(--th-bg);color:var(--muted)}
+.bulk-pendente:hover{background:rgba(255,255,255,.1);color:var(--text)}
+.bulk-clear{background:transparent;color:var(--muted);font-size:11px;border:none;cursor:pointer;padding:4px 8px}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:10px;opacity:.4}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field.full{grid-column:1/-1}
+label{font-size=10px;font-size:10px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.form-input{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:border .2s;width:100%}
+.form-input:focus{border-color:var(--blue)}
+.form-input::placeholder{color:var(--muted)}
+textarea.form-input{min-height:120px;resize:vertical;font-family:monospace;font-size:11px}
+.form-hint{font-size=10px;font-size:10px;color:var(--muted);font-style:italic}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-cancel{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:10px 18px;border-radius=8px;border-radius:8px;cursor:pointer;font-size=13px;font-size:13px;font-weight:600}
+.btn-save{background:var(--blue);border:none;color:#fff;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700}
+.empresa-toggle{display:flex;gap=8px;gap:8px}
+.etoggle{flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;text-align:center;transition:all .2s;background:var(--card);color:var(--muted)}
+.etoggle.selected-neo{border-color:#07a52b;background:rgba(7,165,43,.1);color:#07a52b}
+.etoggle.selected-npf{border-color:#2d69ff;background:rgba(45,105,255,.1);color:#2d69ff}
+
+/* DATETIME INPUT */
+input[type="datetime-local"]{color-scheme:dark}
+body.light input[type="datetime-local"]{color-scheme:light}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator{
+  filter:invert(1);opacity:.5;cursor:pointer}
+body.light input[type="datetime-local"]::-webkit-calendar-picker-indicator{
+  filter:none;opacity:.6}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .sidebar{border-right:none;border-bottom:1px solid var(--border)}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logos">
+    <div class="logo-btn logo-np" id="btn-neo" onclick="filterEmpresa('NEOPROP')" title="Filtrar NEOPROP">NEOPROP</div>
+    <div class="logo-btn logo-npf" id="btn-npf" onclick="filterEmpresa('NPFuture')" title="Filtrar NPFuture">NPFuture</div>
+  </div>
+  <div style="flex:1;margin-left:8px">
+    <div class="header-title">Sistema de Promoções · Suporte</div>
+    <div class="header-sub">Consulta de elegíveis e gestão de atendimentos</div>
+  </div>
+  <div class="header-actions">
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Alternar tema">🌙</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Promoções</div>
+      <div id="promo-list"></div>
+    </div>
+    <div class="sidebar-section">
+      <button class="new-promo-btn" onclick="openModal()">+ Nova Promoção</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div id="promo-info-banner"></div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num blue" id="stat-total">—</div><div class="stat-label">Total elegíveis</div></div>
+      <div class="stat-box"><div class="stat-num gold"  id="stat-pending">—</div><div class="stat-label">Pendentes</div></div>
+      <div class="stat-box"><div class="stat-num green" id="stat-done">—</div><div class="stat-label">Atendidos</div></div>
+      <div class="stat-box"><div class="stat-num"       id="stat-pct" style="color:var(--muted)">—</div><div class="stat-label">Concluído</div></div>
+    </div>
+
+    <div class="search-bar">
+      <input class="search-input" type="text" id="searchInput" placeholder="🔍  Buscar por nome ou e-mail..." oninput="renderTable()">
+    </div>
+
+    <div class="filter-tabs" id="filter-tabs">
+      <div class="ftab active" onclick="setFilter('all',this)">Todos</div>
+      <div class="ftab" onclick="setFilter('pending',this)">⏳ Pendentes</div>
+      <div class="ftab" onclick="setFilter('done',this)">✅ Atendidos</div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <div class="table-title">Lista de Elegíveis</div>
+        <div class="table-count" id="table-count">—</div>
+      </div>
+      <!-- BARRA DE AÇÃO EM LOTE -->
+      <div class="bulk-bar" id="bulkBar">
+        <span class="bulk-count" id="bulkCount">0 selecionados</span>
+        <button class="bulk-btn bulk-atendido" onclick="bulkStatus(true)">✅ Marcar como Atendido</button>
+        <button class="bulk-btn bulk-pendente" onclick="bulkStatus(false)">⏳ Marcar como Pendente</button>
+        <button class="bulk-clear" onclick="clearSelection()">✕ Limpar seleção</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" class="cb" id="cbAll" onclick="toggleAll(this)" title="Selecionar todos"></th>
+            <th>Cliente</th><th>Produto</th><th>Data compra</th><th>WhatsApp</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="clientTable"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="emptyState" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <div style="font-size:13px;color:var(--muted)">Nenhum cliente encontrado</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR CLIENTES -->
+<div class="modal-bg" id="importModalBg" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal">
+    <div class="modal-title">Importar Clientes</div>
+    <div class="modal-sub" id="import-modal-sub">Cole a lista de elegíveis para esta promoção</div>
+    <div class="form-grid">
+      <div class="form-field full">
+        <label>Lista de elegíveis — cole aqui (Excel ou CSV)</label>
+        <textarea class="form-input" id="f-import-clientes" style="min-height:160px" placeholder="Copie as linhas do Excel (Ctrl+A → Ctrl+C no xlsx) e cole aqui.&#10;&#10;Formato esperado: produto | qtd | nome | email | telefone | data pedido | data aprovacao | cupom"></textarea>
+        <span class="form-hint">💡 Linhas existentes são mantidas. Duplicatas de e-mail são ignoradas automaticamente.</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeImportModal()">Cancelar</button>
+      <button class="btn-save" onclick="importarClientes()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA PROMOÇÃO -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Nova Promoção</div>
+    <div class="modal-sub" id="modal-sub">Preencha os dados e cole a lista de elegíveis</div>
+
+    <div class="form-grid">
+      <div class="form-field full">
+        <label>Empresa</label>
+        <div class="empresa-toggle">
+          <div class="etoggle" id="etog-neo" onclick="selectEmpresaForm('NEOPROP')">🟢 NEOPROP</div>
+          <div class="etoggle" id="etog-npf" onclick="selectEmpresaForm('NPFuture')">🔵 NPFuture</div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Nome da promoção / afiliado</label>
+        <input class="form-input" id="f-nome" placeholder="Ex: Leo Molini">
+      </div>
+      <div class="form-field">
+        <label>Cupom</label>
+        <input class="form-input" id="f-cupom" placeholder="Ex: LEOMOLINI70" style="font-family:monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="form-field">
+        <label>Desconto</label>
+        <input class="form-input" id="f-desconto" placeholder="Ex: 70%">
+      </div>
+      <div class="form-field">
+        <label>Início <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(opcional)</span></label>
+        <input class="form-input" type="datetime-local" id="f-inicio">
+      </div>
+      <div class="form-field">
+        <label>Término / prazo final</label>
+        <input class="form-input" type="datetime-local" id="f-fim">
+      </div>
+      <div class="form-field full">
+        <label>Observações / regras</label>
+        <input class="form-input" id="f-obs" placeholder="Ex: Inclui sala ao vivo + conta bônus">
+      </div>
+      <div class="form-field full">
+        <label>Lista de elegíveis <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(opcional — pode adicionar depois)</span></label>
+        <textarea class="form-input" id="f-clientes" placeholder="Deixe em branco para criar a promoção agora e importar a lista depois.&#10;&#10;Quando tiver a lista, cole as linhas do Excel aqui (Ctrl+A → Ctrl+C no xlsx).&#10;Formato: produto | qtd | nome | email | telefone | data pedido | data aprovacao | cupom"></textarea>
+        <span class="form-hint">💡 Você pode criar a promoção sem lista e importar os clientes depois clicando em "Importar clientes" na promoção.</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="salvarPromo()">Salvar Promoção</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── FIREBASE CONFIG ──────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCb1mwJXIOgjo_eYSs_Ebz2jTy9PdwJMnA",
+  authDomain: "sistema-de-promocoes.firebaseapp.com",
+  projectId: "sistema-de-promocoes",
+  storageBucket: "sistema-de-promocoes.firebasestorage.app",
+  messagingSenderId: "122430989385",
+  appId: "1:122430989385:web:b46412e241cc45ae584b98"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── SEMENTE Leo Molini (carregada 1x no primeiro acesso) ─────────────────────
+const SEED_LEOMOLINI = {
+  id:'leomolini70', nome:'Leo Molini', cupom:'LEOMOLINI70', desconto:'70% OFF',
+  prazo:'30/06/2026 23h59', obs:'Sala ao vivo + Conta bônus (DOW+ acima)',
+  empresa:'NPFuture', ativa:true,
+  clientes:[
+    {nome:'Elizeu Antônio Da Silva',email:'elizeuant@gmail.com',tel:'5541997011384',produto:'STANDARD DOW 50K BA',data:'30/06 21:29'},
+    {nome:'Vagner Souza',email:'vjsouza1971@gmail.com',tel:'5531984058536',produto:'STANDARD DOW 50K BA',data:'30/06 21:33'},
+    {nome:'Jesiel De Sousa Santos',email:'santosjesiel@yahoo.com.br',tel:'5594991712933',produto:'STANDARD DOW 50K BA',data:'30/06 21:33'},
+    {nome:'Maicon Silva',email:'maiconpersonal95@gmail.com',tel:'5577998075539',produto:'STANDARD DOW 50K BA',data:'30/06 21:36'},
+    {nome:'Joao Luiz Martins Pinheiro',email:'pinheirojlm@gmail.com',tel:'5541988369307',produto:'STANDARD DOW 50K BA',data:'30/06 21:39'},
+    {nome:'Francy Herbert Rocha Da Costa',email:'herbertfhrc@gmail.com',tel:'5591996046904',produto:'STANDARD DOW 50K BA',data:'30/06 21:53'},
+    {nome:'Denis Agostinho',email:'denissantiagoagostinho@gmail.com',tel:'5515997759340',produto:'STANDARD DOW 50K BA',data:'30/06 21:53'},
+    {nome:'Italo Da Silva Bartholomeu',email:'italoprospero520@gmail.com',tel:'5511965423879',produto:'STANDARD DOW 50K BA',data:'30/06 21:53'},
+    {nome:'Andre Silva',email:'andre_dasilva1@outlook.com',tel:'5511944824764',produto:'STANDARD DOW 50K BA (x2)',data:'30/06 21:56'},
+    {nome:'Eleaquim Pinheiro Brito Filho',email:'eleaquimpinheirofx@gmail.com',tel:'5573981822968',produto:'STANDARD DOW 50K BA',data:'30/06 21:57'},
+    {nome:'Claudemir Bagio De Oliveira',email:'claudemirbagio@hotmail.com',tel:'5584981348729',produto:'STANDARD BOLLINGER 25K BA',data:'30/06 21:59'},
+    {nome:'Ivan Silva Dos Santos',email:'ivansilva@outlook.com',tel:'5555999772173',produto:'STANDARD DOW 50K BA',data:'30/06 22:00'},
+    {nome:'Lindomar Maranhao Nascimento',email:'lindomarnascimento1@yahoo.com.br',tel:'5511960959963',produto:'STANDARD FIBONACCI 200K BA',data:'30/06 22:01'},
+    {nome:'Jose William Oviedo Alves',email:'william_897@hotmail.com',tel:'5553984744663',produto:'STANDARD DOW 50K BA',data:'30/06 22:02'},
+    {nome:'Fagner Domingos Costa',email:'fagnerdomingoscosta@gmail.com',tel:'5534991120991',produto:'STANDARD DOW 50K BA',data:'30/06 22:02'},
+    {nome:'Lucinei Magri',email:'mano1607@gmail.com',tel:'5548984221764',produto:'STANDARD DOW 50K BA',data:'30/06 22:03'},
+    {nome:'Alessandro Carvalho Da Da Silva',email:'ales.carvalho79@gmail.com',tel:'5521973653061',produto:'STANDARD DOW 50K MT',data:'30/06 22:03'},
+    {nome:'Joao Luiz Martins Pinheiro',email:'pinheirojlm@gmail.com',tel:'5541988369307',produto:'FLASH FUNDED DOW 50K BA',data:'30/06 22:06'},
+    {nome:'Maria Luíza Soares Nascimento',email:'alui.nascimento@gmail.com',tel:'5573999480805',produto:'FLASH FUNDED DOW 50K MT',data:'30/06 22:11'},
+    {nome:'Nathan Guerardt',email:'nathanguerardt00@gmail.com',tel:'5521968803656',produto:'STANDARD DOW 50K BA',data:'30/06 22:14'},
+    {nome:'Adnilson Soares Do Vale',email:'adnilsonvale@gmail.com',tel:'5562992882676',produto:'STANDARD DOW 50K BA',data:'30/06 22:15'},
+    {nome:'Raustney De Souza Goncalves',email:'raust.souza@outlook.com',tel:'5579991011204',produto:'STANDARD BOLLINGER 25K BA',data:'30/06 22:26'},
+    {nome:'Marcus Felipe Dos Santos Cunha',email:'tradermf21py@gmail.com',tel:'5532991280722',produto:'STANDARD DOW 50K BA',data:'30/06 22:46'},
+    {nome:'Edianne Giselle Wanderley De Almeida',email:'ediannegiselle@gmail.com',tel:'5587991152302',produto:'STANDARD DOW 50K BA',data:'30/06 22:49'},
+    {nome:'Valmir Ferreira De Andrade',email:'valmirf.andrade@gmail.com',tel:'5511942467546',produto:'FLASH FUNDED FIBONACCI 200K BA',data:'30/06 22:55'},
+    {nome:'José Lucilane Estevam',email:'estevamjoselucilane@gmail.com',tel:'5588997027000',produto:'STANDARD DOW 50K BA',data:'30/06 23:01'},
+    {nome:'Senichiro Koshio',email:'sekoshio@gmail.com',tel:'5511996539901',produto:'FLASH FUNDED ELLIOT 150K BA',data:'30/06 23:03'},
+    {nome:'Elvis Luiz De Andrade',email:'elviluiz@gmail.com',tel:'5544988152603',produto:'STANDARD DOW 50K BA',data:'30/06 23:21'},
+    {nome:'José De Souza Junior',email:'jsouzajr.75@gmail.com',tel:'5584999280370',produto:'STANDARD DOW 50K BA',data:'30/06 23:29'},
+    {nome:'Terry Fukuya',email:'terrytf1@hotmail.com',tel:'5511947650794',produto:'STANDARD DOW 50K BA',data:'30/06 23:33'},
+    {nome:'Homero Paula De Melo',email:'homeropmelo@gmail.com',tel:'5516991997237',produto:'STANDARD BOLLINGER 25K BA',data:'30/06 23:53'},
+  ]
+};
+
+// ── ESTADO ───────────────────────────────────────────────────────────────────
+let PROMOCOES = {};
+let status = {};
+let currentPromo = 'leomolini70';
+let currentFilter = 'all';
+let empresaFilter = null;
+let formEmpresa = 'NPFuture';
+
+// Converte email em ID de documento Firestore-safe
+function encodeEmail(e){
+  return btoa(unescape(encodeURIComponent(e))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+// ── TEMA ─────────────────────────────────────────────────────────────────────
+let dark = true;
+function toggleTheme(){
+  dark = !dark;
+  document.body.classList.toggle('light', !dark);
+  document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+}
+
+// ── FILTRO EMPRESA (header) ───────────────────────────────────────────────────
+function filterEmpresa(emp){
+  if(empresaFilter === emp){ empresaFilter = null; }
+  else { empresaFilter = emp; }
+  document.getElementById('btn-neo').classList.toggle('inactive', empresaFilter === 'NPFuture');
+  document.getElementById('btn-npf').classList.toggle('inactive', empresaFilter === 'NEOPROP');
+  renderSidebar();
+}
+
+// ── DATAS / STATUS ────────────────────────────────────────────────────────────
+function parseData(str, defaultHour=23){
+  if(!str) return null;
+  const m = str.match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2})[h:](\d{2}))?/);
+  if(!m) return null;
+  const [,d,mo,y,h,mi] = m;
+  return new Date(+y, +mo-1, +d, h!=null?+h:defaultHour, mi!=null?+mi:59, 59);
+}
+
+function promoStatus(p){
+  const fim    = parseData(p.fim || p.prazo);
+  const inicio = parseData(p.inicio, 0);
+  const now    = Date.now();
+  if(inicio && inicio > now) return 'prevista';
+  if(!fim) return 'ativa';
+  const diff = fim - now;
+  if(diff < 0) return 'expirada';
+  if(diff < 24*3600*1000) return 'expirando';
+  return 'ativa';
+}
+
+function diffLabel(ms, future){
+  const abs = Math.abs(ms);
+  const h   = Math.floor(abs/3600000);
+  const d   = Math.floor(abs/86400000);
+  if(h < 1)  return future ? 'menos de 1h' : 'menos de 1h atrás';
+  if(h < 24) return future ? `em ${h}h` : `há ${h}h`;
+  return future ? `em ${d} dia${d>1?'s':''}` : `há ${d} dia${d>1?'s':''}`;
+}
+
+function statusChip(p){
+  const st     = promoStatus(p);
+  const fim    = parseData(p.fim || p.prazo);
+  const inicio = parseData(p.inicio, 0);
+  const now    = Date.now();
+  if(st==='prevista'){
+    const diff = inicio - now;
+    return `<span class="expiry-chip chip-upcoming">🗓 Começa ${diffLabel(diff,true)}</span>`;
+  }
+  if(st==='expirada'){
+    return `<span class="expiry-chip chip-exp">✕ Encerrada · ${fim ? diffLabel(fim-now,false) : ''}</span>`;
+  }
+  if(st==='expirando'){
+    return `<span class="expiry-chip chip-soon">⚡ Expira ${fim ? diffLabel(fim-now,true) : ''}</span>`;
+  }
+  return `<span class="expiry-chip chip-ok">● Ativa · encerra ${fim ? diffLabel(fim-now,true) : '—'}</span>`;
+}
+
+function autoFmtDate(el){}
+
+// Converte "31/07/2026 23h59" → "2026-07-31T23:59" (para preencher o input)
+function fmtToDatetimeLocal(str){
+  if(!str) return '';
+  const m = str.match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2})[h:](\d{2}))?/);
+  if(!m) return '';
+  const [,d,mo,y,h,mi] = m;
+  return `${y}-${mo}-${d}T${h||'00'}:${mi||'00'}`;
+}
+
+// Converte "2026-07-31T23:59" → "31/07/2026 23h59"
+function dtLocalToFmt(val){
+  if(!val) return '';
+  const [date, time] = val.split('T');
+  const [y, m, d] = date.split('-');
+  const [h, mi] = (time||'00:00').split(':');
+  return `${d}/${m}/${y} ${h}h${mi}`;
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────────
+function renderSidebar(){
+  const list = document.getElementById('promo-list');
+  const promos = Object.values(PROMOCOES).filter(p => !empresaFilter || p.empresa === empresaFilter);
+  const previstas  = promos.filter(p => promoStatus(p) === 'prevista');
+  const ativas     = promos.filter(p => ['ativa','expirando'].includes(promoStatus(p)));
+  const encerradas = promos.filter(p => promoStatus(p) === 'expirada');
+
+  function etag(p){ return p.empresa==='NPFuture'
+    ? `<span class="promo-empresa-tag etag-npf">NPF</span>`
+    : `<span class="promo-empresa-tag etag-neo">NEO</span>`; }
+  function dateRange(p){
+    const ini = p.inicio ? p.inicio.split(' ')[0] : null;
+    const fim = (p.fim||p.prazo) ? (p.fim||p.prazo).split(' ')[0] : null;
+    if(ini && fim) return `${ini} → ${fim}`;
+    if(fim) return `até ${fim}`;
+    return '—';
+  }
+
+  let html = '';
+
+  if(previstas.length){
+    html += `<div class="sidebar-label" style="margin-bottom:10px">🗓 Previstas</div>`;
+    previstas.forEach(p => {
+      html += `<div class="promo-card upcoming ${currentPromo===p.id?'selected':''}" onclick="selectPromo('${p.id}')">
+        <span class="promo-tag tag-upcoming">🗓 Prevista</span>${etag(p)}
+        <span class="promo-discount">${p.desconto||''}</span>
+        <div class="promo-name">${p.nome}</div>
+        <div class="promo-cupom">${p.cupom}</div>
+        <div class="promo-meta"><span>📅 ${dateRange(p)}</span></div>
+      </div>`;
+    });
+  }
+
+  if(ativas.length){
+    html += `<div class="sidebar-label" style="margin:${previstas.length?'16px':0} 0 10px">● Ativas</div>`;
+    ativas.forEach(p => {
+      const st = promoStatus(p);
+      const stTag = st==='expirando'
+        ? `<span class="promo-tag tag-soon">⚡ Expirando</span>`
+        : `<span class="promo-tag tag-active">● Ativa</span>`;
+      html += `<div class="promo-card active-promo ${currentPromo===p.id?'selected':''}" onclick="selectPromo('${p.id}')">
+        ${stTag}${etag(p)}
+        <span class="promo-discount">${p.desconto||''}</span>
+        <div class="promo-name">${p.nome}</div>
+        <div class="promo-cupom">${p.cupom}</div>
+        <div class="promo-meta"><span>📦 ${(p.clientes||[]).length}</span><span style="margin-left:8px">📅 ${dateRange(p)}</span></div>
+      </div>`;
+    });
+  }
+
+  if(encerradas.length){
+    html += `<div class="sidebar-label" style="margin:16px 0 10px">✕ Encerradas</div>`;
+    encerradas.forEach(p => {
+      html += `<div class="promo-card expired ${currentPromo===p.id?'selected':''}" onclick="selectPromo('${p.id}')">
+        <span class="promo-tag tag-expired">✕ Encerrada</span>${etag(p)}
+        <div class="promo-name">${p.nome}</div>
+        <div class="promo-cupom">${p.cupom}</div>
+        <div class="promo-meta"><span>📦 ${(p.clientes||[]).length}</span><span style="margin-left:8px">📅 ${dateRange(p)}</span></div>
+      </div>`;
+    });
+  }
+  if(!promos.length) html = `<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px 0">Nenhuma promoção</div>`;
+  list.innerHTML = html;
+}
+
+// ── SELECIONAR PROMOÇÃO ──────────────────────────────────────────────────────
+function selectPromo(id){
+  currentPromo = id;
+  currentFilter = 'all';
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.ftab').classList.add('active');
+  renderSidebar();
+  renderBanner();
+  renderTable();
+}
+
+// ── BANNER DA PROMOÇÃO ───────────────────────────────────────────────────────
+function renderBanner(){
+  const p = PROMOCOES[currentPromo];
+  if(!p){ document.getElementById('promo-info-banner').innerHTML=''; return; }
+  const cor = p.empresa==='NPFuture' ? 'blue' : 'green';
+  document.getElementById('promo-info-banner').innerHTML = `
+  <div class="promo-info show" style="margin-bottom:18px">
+    <div class="pi-header">
+      <div class="pi-icon">${p.empresa==='NPFuture'?'🔵':'🟢'}</div>
+      <div style="flex:1">
+        <div class="pi-title">Promoção ${p.nome} · ${p.empresa}</div>
+        <div class="pi-sub">Clientes elegíveis que compraram com o cupom ${p.cupom}</div>
+      </div>
+      <button onclick="openEditModal('${p.id}')" style="background:rgba(45,105,255,.12);border:1px solid rgba(45,105,255,.3);color:var(--blue);padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Editar</button>
+    </div>
+    <div class="pi-rules">
+      <div class="pi-rule"><div class="pi-rule-label">Cupom</div><div class="pi-rule-value ${cor}">${p.cupom}</div></div>
+      <div class="pi-rule"><div class="pi-rule-label">Desconto</div><div class="pi-rule-value gold">${p.desconto||'—'}</div></div>
+      <div class="pi-rule">
+        <div class="pi-rule-label">Início</div>
+        <div class="pi-rule-value" style="font-size:12px">${p.inicio||'—'}</div>
+      </div>
+      <div class="pi-rule" style="${promoStatus(p)==='expirada'?'border-color:rgba(255,68,68,.3);background:rgba(255,68,68,.04)':promoStatus(p)==='prevista'?'border-color:rgba(140,82,255,.3);background:rgba(140,82,255,.04)':''}">
+        <div class="pi-rule-label">Término</div>
+        <div class="pi-rule-value" style="font-size:12px">${p.fim||p.prazo||'—'}</div>
+        <div style="margin-top:5px">${statusChip(p)}</div>
+      </div>
+      <div class="pi-rule"><div class="pi-rule-label">Empresa</div><div class="pi-rule-value ${cor}">${p.empresa}</div></div>
+      <div class="pi-rule"><div class="pi-rule-label">Obs / Bônus</div><div class="pi-rule-value" style="font-size:11px">${p.obs||'—'}</div></div>
+      <div class="pi-rule" style="cursor:pointer;border:1px dashed rgba(45,105,255,.35);background:rgba(45,105,255,.05)" onclick="openImportModal('${p.id}')">
+        <div class="pi-rule-label">Elegíveis</div>
+        <div class="pi-rule-value">${(p.clientes||[]).length} clientes</div>
+        <div style="font-size:9px;color:var(--blue);margin-top:3px;font-weight:600">+ Importar lista</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── FILTRO ───────────────────────────────────────────────────────────────────
+function setFilter(f, el){
+  currentFilter = f;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderTable();
+}
+
+// ── TOGGLE STATUS (Firestore) ─────────────────────────────────────────────────
+function toggleStatus(email){
+  const newVal = !status[email];
+  status[email] = newVal; // atualização otimista
+  renderTable();
+  db.collection('status_clientes').doc(encodeEmail(email)).set({email, atendido: newVal});
+}
+
+// ── PRODUCT BADGE ─────────────────────────────────────────────────────────────
+function productBadge(prod){
+  const isFlash = prod.includes('FLASH');
+  const cls = isFlash ? 'pb-flash' : 'pb-std';
+  const label = isFlash ? 'FLASH' : 'STD';
+  const plan = prod.replace('FLASH FUNDED ','').replace('STANDARD ','').replace(' BA','').replace(' MT','');
+  const plat = prod.includes('MT') ? 'MT5' : 'Black Arrow';
+  return `<span class="product-badge ${cls}">${label}</span><div class="plan-name">${plan} · ${plat}</div>`;
+}
+
+// ── RENDER TABLE ─────────────────────────────────────────────────────────────
+function renderTable(){
+  const p = PROMOCOES[currentPromo];
+  if(!p) return;
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const clientes_all = p.clientes || [];
+  let clients = [...clientes_all];
+
+  if(search) clients = clients.filter(c =>
+    c.nome.toLowerCase().includes(search) || c.email.toLowerCase().includes(search)
+  );
+  if(currentFilter==='pending') clients = clients.filter(c => !status[c.email]);
+  if(currentFilter==='done')    clients = clients.filter(c =>  status[c.email]);
+
+  // stats
+  const total   = clientes_all.length;
+  const done    = clientes_all.filter(c => status[c.email]).length;
+  const pending = total - done;
+  const pct     = total ? Math.round(done/total*100) : 0;
+  document.getElementById('stat-total').textContent   = total;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-done').textContent    = done;
+  document.getElementById('stat-pct').textContent     = pct+'%';
+  document.getElementById('table-count').textContent  = clients.length+' cliente'+(clients.length!==1?'s':'');
+
+  const empty = document.getElementById('emptyState');
+  if(!clients.length){ document.getElementById('clientTable').innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  document.getElementById('clientTable').innerHTML = clients.map((c,i) => {
+    const d = status[c.email];
+    const wpp = 'https://wa.me/'+c.tel;
+    const eid = 'cb_'+CSS.escape(c.email);
+    return `<tr id="row_${i}" style="${d?'opacity:.6':''}" onclick="rowClick(event,'${c.email}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb row-cb" id="${eid}" data-email="${c.email}" onchange="updateBulkBar()"></td>
+      <td><div class="client-name">${c.nome}</div><div class="client-email">${c.email}</div></td>
+      <td>${productBadge(c.produto)}</td>
+      <td style="color:var(--muted);font-size:11px">${c.data}</td>
+      <td onclick="event.stopPropagation()"><a href="${wpp}" target="_blank" class="phone-link">📲 WhatsApp</a></td>
+      <td onclick="event.stopPropagation()"><button class="status-btn ${d?'status-done':'status-pending'}" onclick="toggleStatus('${c.email}')">
+        ${d?'✅ Atendido':'⏳ Pendente'}
+      </button></td>
+    </tr>`;
+  }).join('');
+
+  // resetar cbAll
+  const cbAll = document.getElementById('cbAll');
+  if(cbAll) cbAll.checked = false;
+  updateBulkBar();
+}
+
+// ── SELEÇÃO EM LOTE ───────────────────────────────────────────────────────────
+function rowClick(e, email){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.tagName==='A') return;
+  const cb = document.querySelector(`.row-cb[data-email="${email}"]`);
+  if(cb){ cb.checked = !cb.checked; updateBulkBar(); }
+}
+
+function toggleAll(masterCb){
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = masterCb.checked);
+  updateBulkBar();
+}
+
+function updateBulkBar(){
+  const checked = document.querySelectorAll('.row-cb:checked');
+  const all     = document.querySelectorAll('.row-cb');
+  const bar     = document.getElementById('bulkBar');
+  const master  = document.getElementById('cbAll');
+
+  bar.classList.toggle('show', checked.length > 0);
+  document.getElementById('bulkCount').textContent = checked.length + ' selecionado' + (checked.length!==1?'s':'');
+
+  if(master){
+    master.checked       = all.length > 0 && checked.length === all.length;
+    master.indeterminate = checked.length > 0 && checked.length < all.length;
+  }
+
+  // destacar linhas selecionadas
+  document.querySelectorAll('.row-cb').forEach(cb => {
+    cb.closest('tr').classList.toggle('selected-row', cb.checked);
+  });
+}
+
+function bulkStatus(markDone){
+  const checked = document.querySelectorAll('.row-cb:checked');
+  const batch = db.batch();
+  checked.forEach(cb => {
+    const email = cb.dataset.email;
+    status[email] = markDone;
+    batch.set(db.collection('status_clientes').doc(encodeEmail(email)), {email, atendido: markDone});
+  });
+  clearSelection();
+  renderTable();
+  batch.commit();
+}
+
+function clearSelection(){
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = false);
+  const master = document.getElementById('cbAll');
+  if(master){ master.checked = false; master.indeterminate = false; }
+  updateBulkBar();
+}
+
+// ── MODAL IMPORTAR CLIENTES ───────────────────────────────────────────────────
+let editingPromoId = null; // null = criar novo | string = editar existente
+let importTargetId = null;
+function openImportModal(id){
+  importTargetId = id;
+  const p = PROMOCOES[id];
+  document.getElementById('import-modal-sub').textContent =
+    `Importando para: ${p.nome} · ${p.cupom} · ${(p.clientes||[]).length} clientes já cadastrados`;
+  document.getElementById('f-import-clientes').value = '';
+  document.getElementById('importModalBg').classList.add('open');
+}
+function closeImportModal(){
+  document.getElementById('importModalBg').classList.remove('open');
+  importTargetId = null;
+}
+function importarClientes(){
+  if(!importTargetId) return;
+  const raw = document.getElementById('f-import-clientes').value.trim();
+  if(!raw){ alert('Cole a lista antes de importar.'); return; }
+  const novos = parseClientes(raw);
+  if(!novos.length){ alert('Nenhum cliente reconhecido. Verifique o formato.'); return; }
+
+  const p = PROMOCOES[importTargetId];
+  const clientesAtuais = [...(p.clientes||[])];
+  const existingEmails = new Set(clientesAtuais.map(c => c.email.toLowerCase()));
+  let adicionados = 0;
+  novos.forEach(c => {
+    if(!existingEmails.has(c.email.toLowerCase())){
+      clientesAtuais.push(c);
+      existingEmails.add(c.email.toLowerCase());
+      adicionados++;
+    }
+  });
+
+  db.collection('promocoes').doc(importTargetId).update({clientes: clientesAtuais})
+    .then(() => {
+      closeImportModal();
+      alert(`✅ ${adicionados} cliente(s) adicionado(s)! ${novos.length - adicionados} duplicata(s) ignorada(s).`);
+    })
+    .catch(err => { console.error(err); alert('Erro ao salvar. Tente novamente.'); });
+}
+
+// ── MODAL NOVA / EDITAR PROMOÇÃO ──────────────────────────────────────────────
+function openModal(){
+  editingPromoId = null;
+  document.getElementById('modal-title').textContent = 'Nova Promoção';
+  document.getElementById('modal-sub').textContent = 'Preencha os dados e cole a lista de elegíveis';
+  ['f-nome','f-cupom','f-desconto','f-inicio','f-fim','f-obs','f-clientes'].forEach(f => document.getElementById(f).value='');
+  selectEmpresaForm('NPFuture');
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function openEditModal(id){
+  editingPromoId = id;
+  const p = PROMOCOES[id];
+  document.getElementById('modal-title').textContent = 'Editar Promoção';
+  document.getElementById('modal-sub').textContent = `Editando: ${p.nome} · ${p.cupom}`;
+  document.getElementById('f-nome').value    = p.nome     || '';
+  document.getElementById('f-cupom').value   = p.cupom    || '';
+  document.getElementById('f-desconto').value= p.desconto || '';
+  document.getElementById('f-inicio').value  = fmtToDatetimeLocal(p.inicio || '');
+  document.getElementById('f-fim').value     = fmtToDatetimeLocal(p.fim || p.prazo || '');
+  document.getElementById('f-obs').value     = p.obs      || '';
+  document.getElementById('f-clientes').value= '';
+  selectEmpresaForm(p.empresa || 'NPFuture');
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('open');
+  editingPromoId = null;
+}
+
+function selectEmpresaForm(emp){
+  formEmpresa = emp;
+  document.getElementById('etog-neo').className = 'etoggle'+(emp==='NEOPROP'?' selected-neo':'');
+  document.getElementById('etog-npf').className = 'etoggle'+(emp==='NPFuture'?' selected-npf':'');
+}
+
+function parseClientes(raw){
+  // aceita tabs ou ponto-e-vírgula, pula header se tiver "nome produto"
+  const lines = raw.trim().split('\n').filter(l => l.trim());
+  const clientes = [];
+  for(const line of lines){
+    const sep = line.includes('\t') ? '\t' : ';';
+    const cols = line.split(sep).map(c => c.trim().replace(/^"|"$/g,''));
+    if(cols[0].toLowerCase().includes('nome produto')) continue; // header
+    if(cols.length < 4) continue;
+    // colunas: produto | qtd | nome | email | telefone | data pedido | ...
+    const produto = cols[0] || '';
+    const nome    = cols[2] || cols[1] || '';
+    const email   = cols[3] || '';
+    const tel     = (cols[4]||'').replace(/\D/g,'');
+    const data    = cols[5] ? cols[5].substring(0,10) : '';
+    if(email && nome) clientes.push({nome, email, tel, produto, data});
+  }
+  return clientes;
+}
+
+function salvarPromo(){
+  const nome     = document.getElementById('f-nome').value.trim();
+  const cupom    = document.getElementById('f-cupom').value.trim();
+  const desconto = document.getElementById('f-desconto').value.trim();
+  const inicio   = dtLocalToFmt(document.getElementById('f-inicio').value);
+  const fim      = dtLocalToFmt(document.getElementById('f-fim').value);
+  const obs      = document.getElementById('f-obs').value.trim();
+  const raw      = document.getElementById('f-clientes').value;
+
+  if(!nome || !cupom){ alert('Preencha pelo menos o nome e o cupom.'); return; }
+
+  if(editingPromoId){
+    // ── EDITAR: preserva ID e clientes existentes ──
+    const existingClientes = [...(PROMOCOES[editingPromoId].clientes || [])];
+    const novosClientes = parseClientes(raw);
+    const emails = new Set(existingClientes.map(c => c.email.toLowerCase()));
+    novosClientes.forEach(c => {
+      if(!emails.has(c.email.toLowerCase())){ existingClientes.push(c); emails.add(c.email.toLowerCase()); }
+    });
+    const promo = { id: editingPromoId, nome, cupom, desconto, inicio, fim, obs, empresa: formEmpresa, clientes: existingClientes };
+    db.collection('promocoes').doc(editingPromoId).set(promo);
+    closeModal();
+  } else {
+    // ── CRIAR NOVO ──
+    const id = cupom.toLowerCase().replace(/\W/g,'_')+'_'+Date.now();
+    const clientes = parseClientes(raw);
+    const promo = { id, nome, cupom, desconto, inicio, fim, obs, empresa: formEmpresa, clientes };
+    currentPromo = id;
+    db.collection('promocoes').doc(id).set(promo);
+    closeModal();
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Mostra loading enquanto conecta
+document.getElementById('clientTable').innerHTML =
+  `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">⏳ Conectando ao banco de dados...</td></tr>`;
+
+// Listener em tempo real: promoções
+db.collection('promocoes').onSnapshot(snap => {
+  const fresh = {};
+  snap.forEach(doc => { fresh[doc.id] = {...doc.data(), id: doc.id}; });
+
+  // Primeira vez: banco vazio → carrega semente
+  if(!fresh['leomolini70']){
+    db.collection('promocoes').doc('leomolini70').set(SEED_LEOMOLINI);
+    return; // o próximo snapshot já virá com os dados
+  }
+
+  PROMOCOES = fresh;
+  if(!PROMOCOES[currentPromo]) currentPromo = Object.keys(PROMOCOES)[0];
+  renderSidebar();
+  renderBanner();
+  renderTable();
+}, err => {
+  console.error('Firebase error:', err);
+  document.getElementById('clientTable').innerHTML =
+    `<tr><td colspan="6" style="text-align:center;padding:40px;color:#ff7070">❌ Erro ao conectar. Verifique o console (F12).</td></tr>`;
+});
+
+// Listener em tempo real: status de atendimento
+db.collection('status_clientes').onSnapshot(snap => {
+  const s = {};
+  snap.forEach(doc => { const d = doc.data(); if(d.email) s[d.email] = d.atendido; });
+  status = s;
+  renderTable();
+});
+</script>
+</body>
+</html>
