@@ -196,6 +196,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 body.light input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   filter:none;opacity:.6}
 
+/* LINKS MODAL */
+.links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:16px}
+.link-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-decoration:none;color:var(--text);transition:all .2s;display:flex;flex-direction:column;gap:4px}
+.link-card:hover{border-color:var(--blue);background:rgba(45,105,255,.07);transform:translateY(-1px)}
+.link-card-nome{font-size:11px;font-weight:800;letter-spacing:.6px;color:var(--muted);text-transform:uppercase}
+.link-card-preco{font-size:18px;font-weight:900;color:var(--text)}
+.link-card-desc{font-size:10px;color:var(--blue);font-weight:700}
+.link-card-url{font-size:9px;color:var(--muted);margin-top:4px;word-break:break-all;font-family:monospace}
+
 /* RESPONSIVE */
 @media(max-width:768px){
   .layout{grid-template-columns:1fr}
@@ -287,6 +296,18 @@ body.light input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   </div>
 </div>
 
+<!-- MODAL LINKS DE PAGAMENTO -->
+<div class="modal-bg" id="linksModalBg" onclick="if(event.target===this)closeLinksModal()">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-title">💳 Links de Pagamento</div>
+    <div class="modal-sub" id="links-modal-sub">Clique no plano para abrir o link de pagamento</div>
+    <div class="links-grid" id="links-grid"></div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn-cancel" onclick="closeLinksModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL IMPORTAR CLIENTES -->
 <div class="modal-bg" id="importModalBg" onclick="if(event.target===this)closeImportModal()">
   <div class="modal">
@@ -343,6 +364,10 @@ body.light input[type="datetime-local"]::-webkit-calendar-picker-indicator{
       <div class="form-field full">
         <label>Observações / regras</label>
         <input class="form-input" id="f-obs" placeholder="Ex: Inclui sala ao vivo + conta bônus">
+      </div>
+      <div class="form-field full">
+        <label>Links de Pagamento <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(opcional — um por linha)</span></label>
+        <textarea class="form-input" id="f-links" style="min-height:100px" placeholder="Formato: NOME|PREÇO|URL&#10;Ex: BOLLINGER ONE|R$539,51 (60%)|https://pay.neoprop.com.br/aniversario-neoprop-bollinger-profit-one"></textarea>
       </div>
       <div class="form-field full">
         <label>Lista de elegíveis <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(opcional — pode adicionar depois)</span></label>
@@ -489,6 +514,13 @@ function statusChip(p){
   return `<span class="expiry-chip chip-ok">● Ativa · encerra ${fim ? diffLabel(fim-now,true) : '—'}</span>`;
 }
 
+function linkify(text){
+  if(!text || text === '—') return '—';
+  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const linked = escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--blue);word-break:break-all">$1</a>');
+  return linked.replace(/\n/g,'<br>');
+}
+
 function autoFmtDate(el){}
 
 // Converte "31/07/2026 23h59" → "2026-07-31T23:59" (para preencher o input)
@@ -599,7 +631,10 @@ function renderBanner(){
         <div class="pi-title">Promoção ${p.nome} · ${p.empresa}</div>
         <div class="pi-sub">Clientes elegíveis que compraram com o cupom ${p.cupom}</div>
       </div>
-      <button onclick="openEditModal('${p.id}')" style="background:rgba(45,105,255,.12);border:1px solid rgba(45,105,255,.3);color:var(--blue);padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Editar</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${p.links ? `<button onclick="openLinksModal('${p.id}')" style="background:rgba(7,165,43,.12);border:1px solid rgba(7,165,43,.3);color:var(--green);padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">💳 Links</button>` : ''}
+        <button onclick="openEditModal('${p.id}')" style="background:rgba(45,105,255,.12);border:1px solid rgba(45,105,255,.3);color:var(--blue);padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Editar</button>
+      </div>
     </div>
     <div class="pi-rules">
       <div class="pi-rule"><div class="pi-rule-label">Cupom</div><div class="pi-rule-value ${cor}">${p.cupom}</div></div>
@@ -614,7 +649,7 @@ function renderBanner(){
         <div style="margin-top:5px">${statusChip(p)}</div>
       </div>
       <div class="pi-rule"><div class="pi-rule-label">Empresa</div><div class="pi-rule-value ${cor}">${p.empresa}</div></div>
-      <div class="pi-rule"><div class="pi-rule-label">Obs / Bônus</div><div class="pi-rule-value" style="font-size:11px">${p.obs||'—'}</div></div>
+      <div class="pi-rule"><div class="pi-rule-label">Obs / Bônus</div><div class="pi-rule-value" style="font-size:11px;white-space:pre-wrap;line-height:1.6">${linkify(p.obs||'—')}</div></div>
       <div class="pi-rule" style="cursor:pointer;border:1px dashed rgba(45,105,255,.35);background:rgba(45,105,255,.05)" onclick="openImportModal('${p.id}')">
         <div class="pi-rule-label">Elegíveis</div>
         <div class="pi-rule-value">${(p.clientes||[]).length} clientes</div>
@@ -795,12 +830,34 @@ function importarClientes(){
     .catch(err => { console.error(err); alert('Erro ao salvar. Tente novamente.'); });
 }
 
+// ── MODAL LINKS DE PAGAMENTO ──────────────────────────────────────────────────
+function openLinksModal(id){
+  const p = PROMOCOES[id];
+  if(!p || !p.links) return;
+  document.getElementById('links-modal-sub').textContent = `${p.nome} · ${p.desconto||''}`;
+  const lines = p.links.trim().split('\n').filter(l => l.trim());
+  const cards = lines.map(line => {
+    const [nome, preco, url] = line.split('|').map(s => s?.trim());
+    if(!url) return '';
+    return `<a class="link-card" href="${url}" target="_blank" rel="noopener">
+      <div class="link-card-nome">${nome||''}</div>
+      <div class="link-card-preco">${preco||''}</div>
+      <div class="link-card-desc">🔗 Abrir link de pagamento →</div>
+    </a>`;
+  }).join('');
+  document.getElementById('links-grid').innerHTML = cards || '<div style="color:var(--muted);font-size:12px">Nenhum link cadastrado.</div>';
+  document.getElementById('linksModalBg').classList.add('open');
+}
+function closeLinksModal(){
+  document.getElementById('linksModalBg').classList.remove('open');
+}
+
 // ── MODAL NOVA / EDITAR PROMOÇÃO ──────────────────────────────────────────────
 function openModal(){
   editingPromoId = null;
   document.getElementById('modal-title').textContent = 'Nova Promoção';
   document.getElementById('modal-sub').textContent = 'Preencha os dados e cole a lista de elegíveis';
-  ['f-nome','f-cupom','f-desconto','f-inicio','f-fim','f-obs','f-clientes'].forEach(f => document.getElementById(f).value='');
+  ['f-nome','f-cupom','f-desconto','f-inicio','f-fim','f-obs','f-links','f-clientes'].forEach(f => document.getElementById(f).value='');
   selectEmpresaForm('NPFuture');
   document.getElementById('modalBg').classList.add('open');
 }
@@ -816,6 +873,7 @@ function openEditModal(id){
   document.getElementById('f-inicio').value  = fmtToDatetimeLocal(p.inicio || '');
   document.getElementById('f-fim').value     = fmtToDatetimeLocal(p.fim || p.prazo || '');
   document.getElementById('f-obs').value     = p.obs      || '';
+  document.getElementById('f-links').value   = p.links    || '';
   document.getElementById('f-clientes').value= '';
   selectEmpresaForm(p.empresa || 'NPFuture');
   document.getElementById('modalBg').classList.add('open');
@@ -859,6 +917,7 @@ function salvarPromo(){
   const inicio   = dtLocalToFmt(document.getElementById('f-inicio').value);
   const fim      = dtLocalToFmt(document.getElementById('f-fim').value);
   const obs      = document.getElementById('f-obs').value.trim();
+  const links    = document.getElementById('f-links').value.trim();
   const raw      = document.getElementById('f-clientes').value;
 
   if(!nome || !cupom){ alert('Preencha pelo menos o nome e o cupom.'); return; }
@@ -871,14 +930,14 @@ function salvarPromo(){
     novosClientes.forEach(c => {
       if(!emails.has(c.email.toLowerCase())){ existingClientes.push(c); emails.add(c.email.toLowerCase()); }
     });
-    const promo = { id: editingPromoId, nome, cupom, desconto, inicio, fim, obs, empresa: formEmpresa, clientes: existingClientes };
+    const promo = { id: editingPromoId, nome, cupom, desconto, inicio, fim, obs, links, empresa: formEmpresa, clientes: existingClientes };
     db.collection('promocoes').doc(editingPromoId).set(promo);
     closeModal();
   } else {
     // ── CRIAR NOVO ──
     const id = cupom.toLowerCase().replace(/\W/g,'_')+'_'+Date.now();
     const clientes = parseClientes(raw);
-    const promo = { id, nome, cupom, desconto, inicio, fim, obs, empresa: formEmpresa, clientes };
+    const promo = { id, nome, cupom, desconto, inicio, fim, obs, links, empresa: formEmpresa, clientes };
     currentPromo = id;
     db.collection('promocoes').doc(id).set(promo);
     closeModal();
@@ -919,6 +978,33 @@ db.collection('status_clientes').onSnapshot(snap => {
   status = s;
   renderTable();
 });
+
+// ── SYNC DA PLANILHA (Dobradinha Conta Bônus) ─────────────────────────────────
+const SHEET_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxTtlJ-Aq4kxsPVd2ScV01-gvhDw21sOcXKmMAToMAdsPsWkfcIAmY4_lbEujTR1dmyyA/exec';
+
+async function syncFromSheet() {
+  try {
+    const r    = await fetch(SHEET_SYNC_URL);
+    const data = await r.json();
+    if (!Array.isArray(data) || !data.length) return;
+    const batch = db.batch();
+    data.forEach(function({ email, liberado }) {
+      if (!email) return;
+      batch.set(
+        db.collection('status_clientes').doc(encodeEmail(email)),
+        { email: email, atendido: liberado },
+        { merge: true }
+      );
+    });
+    await batch.commit();
+    console.log('[Sync Planilha] ' + data.length + ' clientes atualizados');
+  } catch (e) { console.warn('[Sync Planilha] Erro:', e.message); }
+}
+// Roda ao carregar a página (com 3s de delay para Firebase conectar)
+window.addEventListener('load', function() { setTimeout(syncFromSheet, 3000); });
+// Roda a cada 5 minutos
+setInterval(syncFromSheet, 5 * 60 * 1000);
+// ── FIM DO SYNC ──────────────────────────────────────────────────────────────
 </script>
 </body>
 </html>
