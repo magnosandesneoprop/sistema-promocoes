@@ -197,13 +197,21 @@ body.light input[type="datetime-local"]::-webkit-calendar-picker-indicator{
   filter:none;opacity:.6}
 
 /* LINKS MODAL */
-.links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:16px}
+.modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:-28px -28px 20px;padding:0 28px}
+.modal-tab{padding:12px 16px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;white-space:nowrap}
+.modal-tab:hover{color:var(--text)}
+.modal-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.modal-tab-pane{display:none}
+.modal-tab-pane.active{display:block}
+.links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:4px}
 .link-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-decoration:none;color:var(--text);transition:all .2s;display:flex;flex-direction:column;gap:4px}
 .link-card:hover{border-color:var(--blue);background:rgba(45,105,255,.07);transform:translateY(-1px)}
 .link-card-nome{font-size:11px;font-weight:800;letter-spacing:.6px;color:var(--muted);text-transform:uppercase}
 .link-card-preco{font-size:18px;font-weight:900;color:var(--text)}
 .link-card-desc{font-size:10px;color:var(--blue);font-weight:700}
 .link-card-url{font-size:9px;color:var(--muted);margin-top:4px;word-break:break-all;font-family:monospace}
+.obs-lines{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.obs-line{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:13px;line-height:1.5;color:var(--text)}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -299,9 +307,17 @@ body.light input[type="datetime-local"]::-webkit-calendar-picker-indicator{
 <!-- MODAL LINKS DE PAGAMENTO -->
 <div class="modal-bg" id="linksModalBg" onclick="if(event.target===this)closeLinksModal()">
   <div class="modal" style="max-width:700px">
-    <div class="modal-title">💳 Links de Pagamento</div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" id="tab-links" onclick="switchLinksTab('links')">💳 Links de Pagamento</div>
+      <div class="modal-tab" id="tab-obs" onclick="switchLinksTab('obs')">📋 Bônus & Regras</div>
+    </div>
     <div class="modal-sub" id="links-modal-sub">Clique no plano para abrir o link de pagamento</div>
-    <div class="links-grid" id="links-grid"></div>
+    <div class="modal-tab-pane active" id="pane-links">
+      <div class="links-grid" id="links-grid"></div>
+    </div>
+    <div class="modal-tab-pane" id="pane-obs">
+      <div id="obs-content"></div>
+    </div>
     <div class="modal-actions" style="margin-top:20px">
       <button class="btn-cancel" onclick="closeLinksModal()">Fechar</button>
     </div>
@@ -835,6 +851,8 @@ function openLinksModal(id){
   const p = PROMOCOES[id];
   if(!p || !p.links) return;
   document.getElementById('links-modal-sub').textContent = `${p.nome} · ${p.desconto||''}`;
+
+  // ── Aba Links ──
   const lines = p.links.trim().split('\n').filter(l => l.trim());
   const cards = lines.map(line => {
     const [nome, preco, url] = line.split('|').map(s => s?.trim());
@@ -846,7 +864,26 @@ function openLinksModal(id){
     </a>`;
   }).join('');
   document.getElementById('links-grid').innerHTML = cards || '<div style="color:var(--muted);font-size:12px">Nenhum link cadastrado.</div>';
+
+  // ── Aba Obs ──
+  const obs = p.obs || '';
+  if(obs.trim()){
+    const obsLines = obs.trim().split('\n').filter(l => l.trim());
+    document.getElementById('obs-content').innerHTML =
+      `<div class="obs-lines">${obsLines.map(l => `<div class="obs-line">${l}</div>`).join('')}</div>`;
+  } else {
+    document.getElementById('obs-content').innerHTML =
+      '<div style="color:var(--muted);font-size:12px;padding:20px 0">Nenhuma observação cadastrada.</div>';
+  }
+
+  switchLinksTab('links');
   document.getElementById('linksModalBg').classList.add('open');
+}
+function switchLinksTab(tab){
+  document.getElementById('tab-links').classList.toggle('active', tab==='links');
+  document.getElementById('tab-obs').classList.toggle('active', tab==='obs');
+  document.getElementById('pane-links').classList.toggle('active', tab==='links');
+  document.getElementById('pane-obs').classList.toggle('active', tab==='obs');
 }
 function closeLinksModal(){
   document.getElementById('linksModalBg').classList.remove('open');
